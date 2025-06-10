@@ -15,15 +15,6 @@
           (println "\n")
           cadastro)))))
 
-;; (defn perdaCalorica []
-;;     (let )
-;;     (println "Digite o nome do exercício que você praticou")
-;; )
-
-;; (defn ganhoCalorico []
-
-;; )
-
 (defn menuCadastro []
   (println "OPCOES DE CADASTRO:\n1. Novo cadastro\n2. Consulta")
   (case (read)
@@ -33,14 +24,11 @@
 (defn menu []
   (println "MENU:\n1. Cadastro\n2. Ganho calorico\n3. Perda calorica\n")
   (case (read)
-    1 (menuCadastro)
-    ;; 2 (perdaCalorica)
-    ;; 3 (ganhoCalorico)
-    )
-  ;;(recur)
-  )
+    1 (menuCadastro))
+  (recur))
 
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
