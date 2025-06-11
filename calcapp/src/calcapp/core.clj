@@ -1,36 +1,8 @@
 (ns calcapp.core
   (:gen-class)
   (:require [clj-http.client :as http-client]
-            [cheshire.core :as json]))
-
-(defn lerInt []
-  (loop []
-    (let [input (read-line)]
-      (if (re-matches #"-?\d+" input)
-        (Integer/parseInt input)
-        (do
-          (println "Por favor digite um numero interio")
-          (recur))))))
-
-(defn lerIdade []
-  (loop []
-    (let [input (read-line)]
-      (if (and (re-matches #"\d+" input)
-               (let [idade (Integer/parseInt input)]
-                 (and (>= idade 8) (<= idade 125))))
-        (Integer/parseInt input)
-        (do
-          (println "Por favor, digite uma idade entre 8 e 125 anos.")
-          (recur))))))
-
-(defn ler1ou2 []
-  (loop []
-    (let [input (read-line)]
-      (if (or (= input "1") (= input "2"))
-        (Integer/parseInt input)
-        (do
-          (println "Por favor, digite 1 ou 2")
-          (recur))))))
+            [cheshire.core :as json]
+            [calcapp.tratamentos :refer :all]))
 
 (defn novoCadastro []
   (println "\nNOVO CADASTRO:")
@@ -58,7 +30,7 @@
             {:keys [sexo idade peso]} mapa]
         (println "\nSexo:" (if (= sexo 1) "Masculino" "Feminino"))
         (println "Idade:" idade "anos")
-        (println "Peso:" peso "Kg\n"))
+        (println "Peso:" peso "Kg"))
     (println "Opcao invalida")))
 
 (defn menuGanhoCalorico []
@@ -99,7 +71,7 @@
 
 (defn menu []
   (println "\nMENU:\n1. Cadastro\n2. Ganho calorico\n3. Perda calorica")
-  (case (read)
+  (case (lerOpcoesMenu)
     1 (menuCadastro)
     2 (menuGanhoCalorico)
     3 (menuPerdaCalorica)
