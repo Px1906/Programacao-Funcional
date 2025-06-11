@@ -8,5 +8,5 @@
    (pos? (:valor lancamento))
    (contains? lancamento :tipo)
    (or
-    (= "despesa" (:tipo lancamento))
-    (= "receita" (:tipo lancamento)))))
+    (= "perdaCalorica" (:tipo lancamento))
+    (= "consumoCalorico" (:tipo lancamento)))))

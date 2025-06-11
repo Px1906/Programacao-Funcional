@@ -16,7 +16,8 @@
             [lein-midje "3.2.1"]] ;; Plugin para suporte a testes automatizados com Midje.
 
   ;; Define o manipulador principal da aplicação.
-  :ring {:handler nota5.handler/app}
+  :ring {:handler nota5.handler/app
+         :port 3001}
 
   ;; Configuração de perfis específicos para desenvolvimento.
   :profiles {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]      ;; Biblioteca para funcionalidades de servidor web.
