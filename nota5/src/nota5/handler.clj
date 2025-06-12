@@ -4,16 +4,7 @@
              [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
              [ring.middleware.json :refer [wrap-json-body]]
              [cheshire.core :as json]
-             [nota5.db :as db]
-             [nota5.lancamentos :as lancamentos]
-             [clj-http.client :as client]))
-  
-
-(defn como-json [conteudo & [status]]
-  {:status (or status 200)
-  :headers {"Content-Type" "application/json; charset=utf-8"}
-  :body (json/generate-string conteudo)})
-
+             [nota5.banco-de-dados :as bd]))
 
 (def usuario (atom ()))
 
@@ -21,49 +12,41 @@
 
 (def bdGanhoCalorico (atom ()))
 
-(defn registro [mapa bd]
-  (swap! bd conj mapa))
+(defn como-json [data]
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body (json/generate-string data)})
 
 (defn setUsuario [dados]
    (let [novo-usuario {:sexo (:sexo dados)
                       :idade (:idade dados)
                       :peso (:peso dados)}]
     (reset! usuario novo-usuario) novo-usuario))
- 
-(def tempo 0)
-
-(defn buscar-calorias-burned [atividade]
-  (client/get "https://calories-burned-by-api-ninjas.p.rapidapi.com/v1/caloriesburned"
-    {:headers {"x-rapidapi-host" "calories-burned-by-api-ninjas.p.rapidapi.com"
-               "x-rapidapi-key" "85b6ee325cmsh20882dff5f8b7e3p1e76fajsn7a32bbceec18"}
-     :query-params {:activity atividade
-                    :weight (:peso @usuario)
-                    :duration tempo}}))
 
 (defroutes app-routes
   (GET "/" [] "Hello Word")
 
   (GET "/cadastro" [] (como-json @usuario))
+  (GET "/bancoDeDados" [] (como-json {:ganho @bdGanhoCalorico :gasto @bdGastoCalorico}))
   
-  (GET "/totalCalorico" [])
+  ;; (GET "/totalCalorico" [] (como-json ...))
+  ;; (GET "/consumoCalorico" [] (como-json ...))
+  ;; (GET "/perdaCalorica" [] (como-json ...))
 
-  (GET "/consumoCalorico" [])
-
-  (GET "/perdaCalorica" [])
+  ;----------------------------------------------------------------------------------------------------------------------------------------
     
-  (POST "/atividade" {body :body}
-  (do
-    (registro body bdGastoCalorico)
-    (como-json {:mensagem "Atividade registrada com sucesso!" :atividade body})))
+  (POST "/perda" {body :body} (como-json (bd/registro body bdGastoCalorico)))
 
-  (POST "/refeicao" [])
+  (POST "/ganho" {body :body} (como-json (bd/registro body bdGanhoCalorico)))
 
   (POST "/cadastro" {body :body}
-    (let [usuario (setUsuario body)]
-      (como-json {:usuario usuario})))
+    (do
+      (setUsuario body)
+      (como-json @usuario)))
 
   (route/not-found "Recurso não encontrado"))
 
 (def app
-  (-> (wrap-defaults app-routes api-defaults)
-      (wrap-json-body {:keywords? true :bigdecimals? true})))
+  (-> app-routes
+      (wrap-json-body {:keywords? true :bigdecimals? true})
+      (wrap-defaults api-defaults)))
