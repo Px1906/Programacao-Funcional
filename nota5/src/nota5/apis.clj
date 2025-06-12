@@ -24,7 +24,7 @@
         query (str quantidadeGramas "g " (getTraducao alimento))
         response (http/get (str urlNinja query)
                            {:headers {"X-Api-Key" chaveNinja}})
-        body (json/parse-string (:body response) true)]
+        body (json/parse-string (first (:itens (:body response))) true)]
     body))
 
 (defn getPerdaCalorica [atividadeQueima tempoQueima]
@@ -37,7 +37,7 @@
                             :query-params {:activity atividadeQueima
                                           :duration tempoQueima
                                           :weight (:peso usuario)}})
-        body (json/parse-string (:body response) true)]
+        body (json/parse-string (:0 (:body response)) true)]
     body))
 
 

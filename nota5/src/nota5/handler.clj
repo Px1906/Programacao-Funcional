@@ -4,7 +4,8 @@
              [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
              [ring.middleware.json :refer [wrap-json-body]]
              [cheshire.core :as json]
-             [nota5.banco-de-dados :as bd]))
+             [nota5.banco-de-dados :as bd]
+             [nota5.apis :as apis]))
 
 (def usuario (atom ()))
 
@@ -28,7 +29,8 @@
 
   (GET "/cadastro" [] (como-json @usuario))
   (GET "/bancoDeDados" [] (como-json {:ganho @bdGanhoCalorico :gasto @bdGastoCalorico}))
-  
+  (GET "/testeGanho" [] (apis/getGanhoCalorico 500 hamburger))
+  (GET "/testePerda" [] ())
   ;; (GET "/totalCalorico" [] (como-json ...))
   ;; (GET "/consumoCalorico" [] (como-json ...))
   ;; (GET "/perdaCalorica" [] (como-json ...))
