@@ -1,19 +1,17 @@
 (ns nota5.handler
-   (:require [compojure.core :refer :all]
-             [compojure.route :as route]
-             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
-             [ring.middleware.json :refer [wrap-json-body]]
-             [cheshire.core :as json]
-             [nota5.banco-de-dados :as bd]
-             [nota5.apis :as apis]))
+   (:require
+    [cheshire.core :as json]
+    [compojure.core :refer :all]
+    [compojure.route :as route]
+    [nota5.apis :as apis]
+    [nota5.banco-de-dados :as bd]
+    [ring.middleware.defaults :refer [api-defaults wrap-defaults]]
+    [ring.middleware.json :refer [wrap-json-body]]))
 
-(def usuario (atom ()))
+(def usuario (atom {}))
+(def bdBancoDeDados (atom []))
 
-(def bdGastoCalorico (atom ()))
-
-(def bdGanhoCalorico (atom ()))
-
-(defn como-json [data]
+(defn comoJson [data]
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body (json/generate-string data)})
@@ -23,28 +21,34 @@
                       :idade (:idade dados)
                       :peso (:peso dados)}]
     (reset! usuario novo-usuario) novo-usuario))
+ 
+;; (println "testePerda: " (:total_calories (first (apis/getPerdaCalorica "Correr" 10 55))))
+;; (println "testeGanho: " (:calories (first (:items (apis/getGanhoCalorico 500 "tomate")))))
 
 (defroutes app-routes
   (GET "/" [] "Hello Word")
 
-  (GET "/cadastro" [] (como-json @usuario))
-  (GET "/bancoDeDados" [] (como-json {:ganho @bdGanhoCalorico :gasto @bdGastoCalorico}))
-  (GET "/testeGanho" [] (apis/getGanhoCalorico 500 hamburger))
-  (GET "/testePerda" [] ())
-  ;; (GET "/totalCalorico" [] (como-json ...))
-  ;; (GET "/consumoCalorico" [] (como-json ...))
-  ;; (GET "/perdaCalorica" [] (como-json ...))
+
+
+  (GET "/cadastro" [] (comoJson @usuario))
+  (GET "/extrato" [inicio fim]
+    (comoJson (bd/filtrarPorPeriodo bdBancoDeDados inicio fim)))
+  (GET "/saldo" [inicio fim] 
+    (comoJson (bd/saldoPorPeriodo bdBancoDeDados inicio fim)))
+  
+  (GET "/testeGanho" [] (comoJson (:calories (first (:itens (apis/getGanhoCalorico 500 "tomate"))))))
+  (GET "/testePerda" [] (comoJson (:total_calories (first (:calories (first (apis/getPerdaCalorica "Correr" 10 55)))))))
+  ;; (GET "/testeTraducao" [] (comoJson (apis/getTraducao "Correr")))
 
   ;----------------------------------------------------------------------------------------------------------------------------------------
-    
-  (POST "/perda" {body :body} (como-json (bd/registro body bdGastoCalorico)))
 
-  (POST "/ganho" {body :body} (como-json (bd/registro body bdGanhoCalorico)))
+  (POST "/perda" {body :body} (comoJson (bd/registroPerda body bdBancoDeDados (:peso @usuario))))
+  (POST "/ganho" {body :body} (comoJson (bd/registroGanho body bdBancoDeDados)))
 
   (POST "/cadastro" {body :body}
     (do
       (setUsuario body)
-      (como-json @usuario)))
+      (comoJson @usuario)))
 
   (route/not-found "Recurso não encontrado"))
 

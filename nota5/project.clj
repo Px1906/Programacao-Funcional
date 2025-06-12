@@ -9,7 +9,8 @@
                  [cheshire "5.8.1"]           ;; Biblioteca para manipulação de JSON.
                  [ring/ring-defaults "0.3.2"] ;; Configurações padrão para aplicações Ring.
                  [ring/ring-json "0.4.0"]     ;; Middleware para lidar com requisições e respostas JSON.
-                 [clj-http "3.9.1"]]          ;; Biblioteca para realizar requisições HTTP externas.
+                 [clj-http "3.9.1"]
+                 [clojure.java-time "0.3.3"]]          ;; Biblioteca para realizar requisições HTTP externas.
 
   ;; Plugins auxiliares para desenvolvimento.
   :plugins [[lein-ring "0.12.5"]  ;; Plugin para facilitar a execução da aplicação web.
