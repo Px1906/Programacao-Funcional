@@ -2,16 +2,18 @@
   (:gen-class)
   (:require [clj-http.client :as http-client]
             [cheshire.core :as json]
-            [calcapp.tratamentos :refer :all]))
+            [calcapp.tratamentos :as tratamentos]
+            ;;[java-time :as jt]
+            ))
 
 (defn novoCadastro []
   (println "\nNOVO CADASTRO:")
   (println "Digite o numero com base no seu sexo: \n1. Masculino \n2. Feminino")
-  (let [sexo (ler1ou2)]
+  (let [sexo (tratamentos/ler1ou2)]
     (println "Digite sua idade:")
-    (let [idade (lerIdade)]
+    (let [idade (tratamentos/lerIdade)]
       (println "Digite seu peso:")
-      (let [peso (lerInt)
+      (let [peso (tratamentos/lerInt)
             cadastro {:sexo sexo :idade idade :peso peso}]
         (println "Dados cadastrados com sucesso")
         (http-client/post "http://localhost:3001/cadastro"
@@ -33,50 +35,58 @@
         (println "Peso:" peso "Kg"))
     (println "Opcao invalida")))
 
-(defn menuGanhoCalorico []
+(defn lancarGanhoCalorico []
   (println "\nREGISTRO DE GANHO CALORICO (ALIMENTO):")
   (println "Digite o nome do alimento:")
-  (let [alimento (read)]
+  (let [alimento (tratamentos/lerStringSemNumeros)]
     (println "Digite a quantidade (em gramas):")
-    (let [quantidade (lerInt)]
+    (let [quantidade (tratamentos/lerInt)]
       (println "Digite a data (formato: dd-mm-yyyy):")
-      (let [data (read)
-            registro {:alimento alimento :quantidade quantidade :data data}]
+      (let [data (tratamentos/lerData)
+            registro {:alimento alimento 
+                      :quantidade quantidade 
+                      :data (str data)}]
         (println "\nEnviando dados do alimento para o servidor...")
-        (let [resposta (http-client/post "http://localhost:3001/ganho"
-                                         {:headers {"Content-Type" "application/json"}
-                                          :body (json/generate-string registro)})]
-          (println "Resposta do servidor:" (:status resposta))
-          (println "Corpo da resposta:" (:body resposta)))
+        (try
+          (let [resposta (http-client/post "http://localhost:3001/ganho"
+                                           {:headers {"Content-Type" "application/json"}
+                                            :body (json/generate-string registro)})]
+            (println "Resposta do servidor:" (:status resposta))
+            (println "Corpo da resposta:" (:body resposta)))
+          (catch Exception e
+            (println "Erro ao enviar dados para o servidor:" (.getMessage e))))
         registro))))
 
-
-(defn menuPerdaCalorica []
+(defn lancarPerdaCalorica []
   (println "\nREGISTRO DE PERDA CALORICA (ATIVIDADE FISICA):")
   (println "Digite o nome da atividade fisica:")
-  (let [atividade (lerInt)]
+  (let [atividade (tratamentos/lerStringSemNumeros)]
     (println "Digite a duracao (em minutos):")
-    (let [duracao (read)]
+    (let [duracao (tratamentos/lerInt)]
       (println "Digite a data (formato: dd-mm-yyyy):")
-      (let [data (read)
-            registro {:atividade atividade :duracao duracao :data data}]
-        (println "\nEnviando dados da atividade para o servidor...")
-        (let [resposta (http-client/post "http://localhost:3001/perda"
-                                         {:headers {"Content-Type" "application/json"}
-                                          :body (json/generate-string registro)})]
-          (println "Resposta do servidor:" (:status resposta))
-          (println "Corpo da resposta:" (:body resposta)))
+      (let [data (tratamentos/lerData)
+            registro {:atividade atividade
+                      :duracao duracao
+                      :data (str data)}]
+        (println "nEnviando dados da atividade para o servidor ... ")
+        (try
+          (let [resposta (http-client/post "http://localhost:3001/perda"
+                                           {:headers {"Content-Type" "application/json"}
+                                            :body (json/generate-string registro)})]
+            (println "Resposta do servidor:" (:status resposta))
+            (println "Corpo da resposta:" (:body resposta)))
+          (catch Exception e
+            (println "Erro ao enviar dados para o servidor:" (.getMessage e))))
         registro))))
-
 
 (defn menu []
   (println "\nMENU:\n1. Cadastro\n2. Ganho calorico\n3. Perda calorica")
-  (case (lerOpcoesMenu)
-    1 (menuCadastro)
-    2 (menuGanhoCalorico)
-    3 (menuPerdaCalorica)
-    (println "Opcao invalida"))
-  (recur))
+  (let [opcao (tratamentos/lerOpcoesMenu)]
+    (case opcao
+      1 (do (menuCadastro) (recur))
+      2 (do (lancarGanhoCalorico) (recur))
+      3 (do (lancarPerdaCalorica) (recur))
+      (do (println "Opcao invalida") (recur)))))
 
 (defn -main
   "Ponto de entrada do programa."
