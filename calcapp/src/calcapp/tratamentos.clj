@@ -29,10 +29,10 @@
 
 (defn lerOpcoesMenu []
     (let [input (read-line)]
-      (if (or (= input "1") (= input "2") (= input "3"))
+      (if (or (= input "1") (= input "2") (= input "3") (= input "4"))
         (Integer/parseInt input)
         (do
-          (println "Por favor, digite 1, 2 ou 3")
+          (println "Por favor, digite um numero entre 1 e 4")
           (recur)))))
 
 (defn lerStringSemNumeros []
@@ -54,11 +54,9 @@
         (println "Data invalida! Use o formato dd-MM-yyyy.")
         (recur)))))
 
-;; (defn lerData []
-;;   (println "Digite a data (formato: dd-MM-yyyy):")
-;;   (let [input (read-line)]
-;;     (try
-;;       (jt/local-date "dd-MM-yyyy" input)
-;;       (catch Exception _
-;;         (println "Data inválida! Use o formato dd-MM-yyyy.")
-;;         (recur)))))
+(defn lerIntervaloDeDatas []
+  (println "Informe a data inicial:")
+  (let [data-inicio (lerData)]
+    (println "Informe a data final:")
+    (let [data-fim (lerData)]
+      [(str data-inicio) (str data-fim)])))

@@ -2,9 +2,7 @@
   (:gen-class)
   (:require [clj-http.client :as http-client]
             [cheshire.core :as json]
-            [calcapp.tratamentos :as tratamentos]
-            ;;[java-time :as jt]
-            ))
+            [calcapp.tratamentos :as tratamentos]))
 
 (defn novoCadastro []
   (println "\nNOVO CADASTRO:")
@@ -30,10 +28,12 @@
             corpo-json (:body resposta)
             mapa (json/parse-string corpo-json true)
             {:keys [sexo idade peso]} mapa]
-        (println "\nSexo:" (if (= sexo 1) "Masculino" "Feminino"))
-        (println "Idade:" idade "anos")
-        (println "Peso:" peso "Kg"))
-    (println "Opcao invalida")))
+        
+        (if (not (= idade nil)) ((println "\nSexo:" (if (= sexo 1) "Masculino" "Feminino"))
+                                 (println "Idade:" idade "anos")
+                                 (println "Peso:" peso "Kg"))
+        (println "\n\nFaca um cadastro antes!")))
+        (println "Opcao invalida")))
 
 (defn lancarGanhoCalorico []
   (println "\nREGISTRO DE GANHO CALORICO (ALIMENTO):")
@@ -43,8 +43,8 @@
     (let [quantidade (tratamentos/lerInt)]
       (println "Digite a data (formato: dd-mm-yyyy):")
       (let [data (tratamentos/lerData)
-            registro {:alimento alimento 
-                      :quantidade quantidade 
+            registro {:alimento alimento
+                      :quantidade quantidade
                       :data (str data)}]
         (println "\nEnviando dados do alimento para o servidor...")
         (try
@@ -79,13 +79,43 @@
             (println "Erro ao enviar dados para o servidor:" (.getMessage e))))
         registro))))
 
+(defn consultas []
+  (let [[inicio fim] (tratamentos/lerIntervaloDeDatas)
+        respostaExtrato (http-client/get "http://localhost:3001/extrato"
+                                          {:query-params {"inicio" inicio "fim" fim}
+                                           :headers {"Accept" "application/json"}})
+        corpoJsonExtrato (:body respostaExtrato)
+        transacoes (json/parse-string corpoJsonExtrato true)
+
+        respostaSaldo (http-client/get "http://localhost:3001/saldo"
+                                        {:query-params {"inicio" inicio "fim" fim}
+                                         :headers {"Accept" "application/json"}})
+        corpoJsonSaldo (:body respostaSaldo)
+        saldo (json/parse-string corpoJsonSaldo true)
+
+        transacoesGanhos (filter #(= (:tipo %) "ganho") transacoes)
+        transacoesPerdas (filter #(= (:tipo %) "perda") transacoes)]
+
+    (println "\nEXTRATO COMPLETO NO PERIODO:")
+    (println (str "De " inicio " até " fim))
+
+    (println "\nGANHOS CALORICOS:")
+    (run! #(println "Alimento:" (:comida %) " Quantidade:" (:quantidade %) "g Calorias:" (:calorias %) " Data:" (:data %)) transacoesGanhos)
+
+    (println "\nPERDAS CALORICAS")
+    (run! #(println "Atividade:" (:atividade %) " Duracao:" (:duracao %) "min Calorias:" (:calorias %) " Data:" (:data %)) transacoesPerdas)
+
+    (println "\nSALDO FINAL")
+    (println "Saldo de calorias por período:" saldo "calorias\n")))
+
 (defn menu []
-  (println "\nMENU:\n1. Cadastro\n2. Ganho calorico\n3. Perda calorica")
+  (println "\nMENU:\n1. Cadastro\n2. Ganho calorico\n3. Perda calorica\n4. Consultas")
   (let [opcao (tratamentos/lerOpcoesMenu)]
     (case opcao
       1 (do (menuCadastro) (recur))
       2 (do (lancarGanhoCalorico) (recur))
       3 (do (lancarPerdaCalorica) (recur))
+      4 (do (consultas) (recur))
       (do (println "Opcao invalida") (recur)))))
 
 (defn -main

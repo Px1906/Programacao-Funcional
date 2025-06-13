@@ -30,11 +30,14 @@
                    :data (:data lancamento)
                    :calorias (:total_calories (first (apis/getPerdaCalorica (:atividade lancamento)
                                                     (:duracao lancamento)
-                                                    peso)))}))
+                                                    peso)))
+                   :duracao (:duracao lancamento)}))
 
 (defn registroGanho [lancamento col]
   (swap! col conj {:tipo "ganho"
                    :comida (:alimento lancamento)
                    :data (:data lancamento) 
                    :calorias (:calories (first (:items (apis/getGanhoCalorico (:quantidade lancamento) 
-                                                    (:alimento lancamento)))))}))
+                                                    (:alimento lancamento)))))
+                   :quantidade (:quantidade lancamento)}))
+
